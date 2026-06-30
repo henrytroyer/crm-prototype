@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useNavLayer } from "../../context/NavigationHistoryContext";
 import { getTimelineLabel } from "../../data/timelines";
 import { buildMockVolunteerDetail } from "../../data/mockVolunteerDetail";
 import type { Volunteer } from "../../types/volunteer";
@@ -29,14 +30,40 @@ export default function ApplicationDetailPanel({
   const [drillDown, setDrillDown] = useState<DrillDownView>(null);
   const timelineLabel = getTimelineLabel(volunteer.timelineId);
 
+  const { requestClose: requestCloseDrillDown } = useNavLayer(
+    drillDown !== null,
+    () => setDrillDown(null),
+    `form-${drillDown ?? "none"}-${volunteer.id}`,
+  );
+
+  const { requestClose: requestCloseEmail } = useNavLayer(
+    sendEmailOpen,
+    () => setSendEmailOpen(false),
+    `send-email-${volunteer.id}`,
+  );
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "Escape" &&
+        !drillDown &&
+        !sendEmailOpen
+      ) {
+        onBack();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onBack, drillDown, sendEmailOpen]);
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-300 bg-slate-200/60 p-2 shadow-sm">
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-6 py-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-crm-taupe/20 bg-crm-surface p-2 shadow-sm">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-crm-taupe/20 bg-crm-surface">
+        <div className="shrink-0 border-b border-crm-taupe/20 bg-crm-taupe-50 px-6 py-4">
           <button
             type="button"
             onClick={onBack}
-            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+            className="text-sm font-medium text-crm-slate hover:text-crm-heading"
           >
             ← Back to applications
           </button>
@@ -64,13 +91,6 @@ export default function ApplicationDetailPanel({
               </div>
             </Panel>
 
-            {sendEmailOpen && (
-              <SendEmailModal
-                detail={detail}
-                onClose={() => setSendEmailOpen(false)}
-              />
-            )}
-
             <Panel title="Onboarding Progress">
               <OnboardingProgress
                 steps={detail.onboardingSteps}
@@ -95,7 +115,7 @@ export default function ApplicationDetailPanel({
                 <InfoCard label="Housing" value={detail.housing} />
               </div>
               <div className="mt-6">
-                <h4 className="text-sm font-semibold text-slate-700">
+                <h4 className="text-sm font-semibold text-crm-heading">
                   Itinerary
                 </h4>
                 <div className="mt-3">
@@ -120,6 +140,10 @@ export default function ApplicationDetailPanel({
           </div>
         </div>
 
+        {sendEmailOpen && (
+          <SendEmailModal detail={detail} onClose={requestCloseEmail} />
+        )}
+
         {drillDown && (
           <FormFieldsPanel
             title={
@@ -127,6 +151,7 @@ export default function ApplicationDetailPanel({
                 ? `Full application — ${detail.name}`
                 : `Pastor reference — ${detail.name}`
             }
+            backLabel={detail.name}
             fields={
               drillDown === "application"
                 ? detail.applicationFormFields
@@ -142,7 +167,7 @@ export default function ApplicationDetailPanel({
                 ? findFormPdf(detail.files, /application.*form/i)
                 : findFormPdf(detail.files, /pastor.*reference/i)
             }
-            onClose={() => setDrillDown(null)}
+            onClose={requestCloseDrillDown}
           />
         )}
       </div>
@@ -152,8 +177,8 @@ export default function ApplicationDetailPanel({
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/40 p-5">
-      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+    <div className="rounded-2xl border border-crm-taupe/20 bg-crm-white p-5">
+      <h3 className="text-lg font-semibold text-crm-heading">{title}</h3>
       {children}
     </div>
   );
@@ -170,18 +195,18 @@ function ActionButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:bg-slate-50"
+      className="rounded-2xl border border-crm-taupe/20 bg-crm-surface p-4 text-left transition hover:bg-crm-taupe-50"
     >
       <div className="font-semibold">{label}</div>
-      <div className="mt-2 text-sm text-slate-500">Open and manage details</div>
+      <div className="mt-2 text-sm text-crm-slate">Open and manage details</div>
     </button>
   );
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-      <div className="text-sm text-slate-500">{label}</div>
+    <div className="rounded-2xl bg-crm-surface p-4 ring-1 ring-crm-taupe/20">
+      <div className="text-sm text-crm-slate">{label}</div>
       <div className="mt-2 font-semibold">{value}</div>
     </div>
   );
@@ -189,8 +214,8 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 
 function TimelineEvent({ date, text }: { date: string; text: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-      <div className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">
+    <div className="flex items-center gap-4 rounded-2xl bg-crm-surface p-4 ring-1 ring-crm-taupe/20">
+      <div className="rounded-full bg-crm-white px-3 py-1 text-sm font-semibold">
         {date}
       </div>
       <div>{text}</div>

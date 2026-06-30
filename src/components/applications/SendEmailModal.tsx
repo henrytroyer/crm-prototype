@@ -8,6 +8,7 @@ import {
   buildMergeContext,
   mergeEmailTemplate,
 } from '../../utils/emailMerge';
+import OverlayBackButton from '../layout/OverlayBackButton';
 
 interface SendEmailModalProps {
   detail: VolunteerDetail;
@@ -99,20 +100,21 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
     >
       <button
         type="button"
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-        aria-label="Close"
+        className="absolute inset-0 bg-stone-900/25 backdrop-blur-sm"
+        aria-label={`Back to ${detail.name}`}
         onClick={onClose}
       />
 
-      <div className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-        <div className="shrink-0 border-b border-slate-200 px-5 py-4">
+      <div className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-crm-taupe/20 bg-crm-surface shadow-2xl">
+        <div className="shrink-0 border-b border-crm-taupe/20 px-5 py-4">
+          <OverlayBackButton backLabel={detail.name} onBack={onClose} />
           <h2
             id="send-email-title"
-            className="text-lg font-semibold text-slate-900"
+            className="mt-3 text-lg font-semibold text-crm-heading"
           >
             Send email
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-crm-slate">
             Choose a recipient and template for {detail.name}.
           </p>
         </div>
@@ -126,13 +128,13 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
           ) : (
             <>
               <fieldset>
-                <legend className="text-sm font-medium text-slate-700">
+                <legend className="text-sm font-medium text-crm-heading">
                   To
                 </legend>
                 <ul className="mt-2 space-y-2">
                   {recipients.map((recipient, index) => (
                     <li key={`${recipient.role}-${recipient.address}`}>
-                      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 px-3 py-2.5 has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50">
+                      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-crm-taupe/20 px-3 py-2.5 has-[:checked]:border-crm-indigo has-[:checked]:bg-crm-taupe-50">
                         <input
                           type="radio"
                           name="email-recipient"
@@ -141,10 +143,10 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
                           className="mt-1"
                         />
                         <span>
-                          <span className="block text-sm font-medium text-slate-900">
+                          <span className="block text-sm font-medium text-crm-heading">
                             {recipient.label}
                           </span>
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm text-crm-slate">
                             {recipient.address}
                           </span>
                         </span>
@@ -157,7 +159,7 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
               <div>
                 <label
                   htmlFor="email-template"
-                  className="text-sm font-medium text-slate-700"
+                  className="text-sm font-medium text-crm-heading"
                 >
                   Template
                 </label>
@@ -165,7 +167,7 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
                   id="email-template"
                   value={templateId}
                   onChange={(e) => setTemplateId(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                  className="mt-2 w-full rounded-xl border border-crm-taupe/20 px-3 py-2.5 text-sm outline-none focus:border-crm-slate focus:ring-2 focus:ring-crm-taupe/20"
                 >
                   {EMAIL_TEMPLATES.map((template) => (
                     <option key={template.id} value={template.id}>
@@ -176,12 +178,12 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-slate-700">Preview</h3>
-                <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-                  <p className="font-medium text-slate-900">
+                <h3 className="text-sm font-medium text-crm-heading">Preview</h3>
+                <div className="mt-2 rounded-xl border border-crm-taupe/20 bg-crm-white p-4 text-sm">
+                  <p className="font-medium text-crm-heading">
                     Subject: {merged.subject || '—'}
                   </p>
-                  <pre className="mt-3 whitespace-pre-wrap font-sans text-slate-700">
+                  <pre className="mt-3 whitespace-pre-wrap font-sans text-crm-text">
                     {merged.body || '—'}
                   </pre>
                 </div>
@@ -199,18 +201,11 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
           )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-200 px-5 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
+        <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-crm-taupe/20 px-5 py-4">
           {mailtoUrl && (
             <a
               href={mailtoUrl}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-xl border border-crm-taupe/20 px-4 py-2 text-sm font-medium text-crm-heading hover:bg-crm-taupe-50"
             >
               Open in email app
             </a>
@@ -219,7 +214,7 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
             type="button"
             disabled={sending || recipients.length === 0}
             onClick={handleSend}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-crm-indigo px-4 py-2 text-sm font-medium text-white hover:bg-crm-indigo-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             {sending ? 'Sending…' : 'Send email'}
           </button>

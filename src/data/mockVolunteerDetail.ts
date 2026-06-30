@@ -17,7 +17,7 @@ function mockEmail(name: string): string {
 const MOCK_PDF_URL =
   "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 
-function mockFiles(seed: string): VolunteerFile[] {
+export function mockFiles(seed: string): VolunteerFile[] {
   return [
     {
       id: `${seed}-itinerary`,
@@ -28,6 +28,18 @@ function mockFiles(seed: string): VolunteerFile[] {
     {
       id: `${seed}-passport`,
       name: "Passport.pdf",
+      isImage: false,
+      url: MOCK_PDF_URL,
+    },
+    {
+      id: `${seed}-background`,
+      name: "Background-check.pdf",
+      isImage: false,
+      url: MOCK_PDF_URL,
+    },
+    {
+      id: `${seed}-safeguarding`,
+      name: "Child-safeguarding-certificate.pdf",
       isImage: false,
       url: MOCK_PDF_URL,
     },

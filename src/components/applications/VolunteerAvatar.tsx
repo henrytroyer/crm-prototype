@@ -23,14 +23,14 @@ export default function VolunteerAvatar({
       <img
         src={profilePhotoUrl}
         alt=""
-        className={`${sizeClass} shrink-0 border-2 border-white object-cover shadow-md ring-1 ring-slate-200 ${className}`}
+        className={`${sizeClass} shrink-0 border-2 border-white object-cover shadow-md ring-1 ring-crm-taupe/20 ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`${sizeClass} flex shrink-0 items-center justify-center bg-slate-200 text-slate-400 ring-1 ring-slate-200 ${className}`}
+      className={`${sizeClass} flex shrink-0 items-center justify-center bg-crm-taupe-100 text-crm-slate ring-1 ring-crm-taupe/20 ${className}`}
       role="img"
       aria-label={`${name} (no photo)`}
     >

@@ -1,5 +1,13 @@
-import Dashboard from "./pages/Dashboard";
+import { LayoutProvider } from './context/LayoutContext';
+import { NavigationHistoryProvider } from './context/NavigationHistoryContext';
+import Dashboard from './pages/Dashboard';
 
 export default function App() {
-  return <Dashboard />;
+  return (
+    <LayoutProvider>
+      <NavigationHistoryProvider>
+        <Dashboard />
+      </NavigationHistoryProvider>
+    </LayoutProvider>
+  );
 }

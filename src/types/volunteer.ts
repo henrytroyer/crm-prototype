@@ -7,11 +7,14 @@ export interface SignupTimeline {
   endDate: string;
 }
 
+export type VolunteerFileAccess = 'open' | 'password';
+
 export interface VolunteerFile {
   id: string;
   name: string;
   url?: string;
   isImage: boolean;
+  access?: VolunteerFileAccess;
 }
 
 export interface TermNote {
@@ -35,7 +38,12 @@ export interface VolunteerTerm {
   quickbooksInvoiceId?: string;
   pastorReferenceStatus?: string;
   locationPreference?: string;
+  /** Application pipeline term vs recruitment service record */
+  recordType?: 'application' | 'recruitment';
+  recruitmentProspectId?: string;
 }
+
+export const RECRUITMENT_TIMELINE_ID = 'recruitment';
 
 export type EmailRecipientRole =
   | "volunteer"

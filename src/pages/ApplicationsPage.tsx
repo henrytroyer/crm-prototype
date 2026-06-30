@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ApplicationDetailPanel from "../components/applications/ApplicationDetailPanel";
 import ApplicationFilters from "../components/applications/ApplicationFilters";
 import PipelineSection from "../components/applications/PipelineSection";
+import { useLayout } from "../context/LayoutContext";
+import { useNavLayer } from "../context/NavigationHistoryContext";
 import {
   applicationPipeline,
   countVolunteers,
@@ -17,6 +19,12 @@ export default function ApplicationsPage() {
   const [filters, setFilters] = useState<ApplicationFilterState>(emptyFilters);
   const [selectedApplication, setSelectedApplication] =
     useState<Volunteer | null>(null);
+
+  const { requestClose: requestCloseApplication } = useNavLayer(
+    selectedApplication !== null,
+    () => setSelectedApplication(null),
+    `application-${selectedApplication?.id ?? "none"}`,
+  );
 
   const totalCount = useMemo(
     () => countVolunteers(applicationPipeline),
@@ -35,12 +43,19 @@ export default function ApplicationsPage() {
 
   const showingDetail = selectedApplication !== null;
 
+  const { setDetailMode } = useLayout();
+
+  useEffect(() => {
+    setDetailMode(showingDetail);
+    return () => setDetailMode(false);
+  }, [showingDetail, setDetailMode]);
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="mb-6 shrink-0">
-        <h1 className="text-4xl font-bold">Applications</h1>
+        <h1 className="text-4xl font-semibold text-crm-heading">Applications</h1>
         {!showingDetail && (
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-crm-slate">
             Track volunteers through onboarding, references, placement, and
             deployment.
           </p>
@@ -50,7 +65,7 @@ export default function ApplicationsPage() {
       {showingDetail && selectedApplication && (
         <ApplicationDetailPanel
           volunteer={selectedApplication}
-          onBack={() => setSelectedApplication(null)}
+          onBack={requestCloseApplication}
         />
       )}
 
@@ -65,17 +80,17 @@ export default function ApplicationsPage() {
           />
 
           {filteredPipeline.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-              <p className="text-lg font-semibold text-slate-900">
+            <div className="rounded-3xl border border-dashed border-crm-taupe/28 bg-crm-surface p-12 text-center">
+              <p className="text-lg font-semibold text-crm-heading">
                 No volunteers match these filters
               </p>
-              <p className="mt-2 text-slate-500">
+              <p className="mt-2 text-crm-slate">
                 Try clearing filters or selecting different locations or timelines.
               </p>
               <button
                 type="button"
                 onClick={() => setFilters(emptyFilters)}
-                className="mt-6 rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+                className="mt-6 rounded-2xl bg-crm-indigo px-5 py-2.5 text-sm font-medium text-white transition hover:bg-crm-indigo-dark"
               >
                 Clear all filters
               </button>
