@@ -1,14 +1,21 @@
 import { I58_LOGO_COLOR_URL } from '../../constants/i58Brand';
 import type { ContactEmailMessage } from '../../types/contact';
+import {
+  EMAIL_ARROW_COLOR,
+  EMAIL_DIRECTION_VIEWBOX,
+  INBOUND_ARROW_PATH,
+  OUTBOUND_ARROW_PATH,
+} from './emailDirectionArrowPaths';
 
 interface EmailDirectionIndicatorProps {
   direction: ContactEmailMessage['direction'];
   size?: 'sm' | 'md';
 }
 
-const logoHeights = {
-  sm: 'h-5',
-  md: 'h-6',
+/** Narrow crop — mostly the 8, arrow dominates. */
+const sizes = {
+  sm: { height: 22, width: 26 },
+  md: { height: 26, width: 30 },
 } as const;
 
 export default function EmailDirectionIndicator({
@@ -17,45 +24,32 @@ export default function EmailDirectionIndicator({
 }: EmailDirectionIndicatorProps) {
   const isOutbound = direction === 'outbound';
   const label = isOutbound ? 'Sent from i58' : 'Received into i58';
-  const logoClass = `${logoHeights[size]} w-auto shrink-0 object-contain`;
+  const arrowPath = isOutbound ? OUTBOUND_ARROW_PATH : INBOUND_ARROW_PATH;
+  const { height, width } = sizes[size];
 
   return (
     <span
-      className="mt-0.5 flex shrink-0 items-center gap-0.5 text-crm-slate"
+      className="relative mt-0.5 inline-block shrink-0 overflow-hidden"
+      style={{ height, width }}
       aria-label={label}
       title={label}
     >
-      {!isOutbound && <DirectionArrow direction="left" />}
-      <img src={I58_LOGO_COLOR_URL} alt="" className={logoClass} aria-hidden />
-      {isOutbound && <DirectionArrow direction="right" />}
+      <img
+        src={I58_LOGO_COLOR_URL}
+        alt=""
+        className="absolute top-0 right-0 h-full w-auto max-w-none opacity-40"
+        aria-hidden
+      />
+      <svg
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        viewBox={EMAIL_DIRECTION_VIEWBOX}
+        preserveAspectRatio="xMidYMid meet"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden
+      >
+        <path d={arrowPath} fill={EMAIL_ARROW_COLOR} />
+      </svg>
     </span>
-  );
-}
-
-function DirectionArrow({ direction }: { direction: 'left' | 'right' }) {
-  return (
-    <svg
-      className="h-3 w-3 shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden
-    >
-      {direction === 'right' ? (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2.5}
-          d="M5 12h14m0 0l-6-6m6 6l-6 6"
-        />
-      ) : (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2.5}
-          d="M19 12H5m0 0l6-6m-6 6l6 6"
-        />
-      )}
-    </svg>
   );
 }

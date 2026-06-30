@@ -16,6 +16,7 @@ interface ContactDetailPanelProps {
   onBack: () => void;
   onSelectContact?: (contactId: string) => void;
   onGoToRecruitment?: (prospectId: string) => void;
+  onGoToApplication?: (applicationId: string) => void;
   onContactUpdated?: () => void;
 }
 
@@ -24,6 +25,7 @@ export default function ContactDetailPanel({
   onBack,
   onSelectContact,
   onGoToRecruitment,
+  onGoToApplication,
   onContactUpdated,
 }: ContactDetailPanelProps) {
   const { detail, loading, error, saving, updateCoreFields } =
@@ -116,15 +118,36 @@ export default function ContactDetailPanel({
               {detail.tags.includes('volunteer') && (
                 <Panel title="Current application">
                   {detail.currentApplication ? (
-                    <div className="mt-4 rounded-2xl bg-crm-surface p-4 ring-1 ring-crm-taupe/20">
-                      <p className="font-semibold text-crm-heading">
-                        {detail.currentApplication.timelineLabel}
-                      </p>
-                      <p className="mt-1 text-sm text-crm-slate">
-                        {detail.currentApplication.stage} ·{' '}
-                        {detail.currentApplication.status}
-                      </p>
-                    </div>
+                    onGoToApplication ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onGoToApplication(detail.currentApplication!.itemId)
+                        }
+                        className="mt-4 flex w-full items-center justify-between rounded-2xl bg-crm-surface p-4 text-left ring-1 ring-crm-taupe/20 transition hover:ring-crm-taupe/50"
+                      >
+                        <div>
+                          <p className="font-semibold text-crm-heading">
+                            {detail.currentApplication.timelineLabel}
+                          </p>
+                          <p className="mt-1 text-sm text-crm-slate">
+                            {detail.currentApplication.stage} ·{' '}
+                            {detail.currentApplication.status}
+                          </p>
+                        </div>
+                        <span className="text-crm-slate">→</span>
+                      </button>
+                    ) : (
+                      <div className="mt-4 rounded-2xl bg-crm-surface p-4 ring-1 ring-crm-taupe/20">
+                        <p className="font-semibold text-crm-heading">
+                          {detail.currentApplication.timelineLabel}
+                        </p>
+                        <p className="mt-1 text-sm text-crm-slate">
+                          {detail.currentApplication.stage} ·{' '}
+                          {detail.currentApplication.status}
+                        </p>
+                      </div>
+                    )
                   ) : (
                     <p className="mt-4 text-sm text-crm-slate">
                       Not currently in an active application pipeline.

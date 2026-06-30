@@ -2,7 +2,7 @@ import { useLayout } from '../../context/LayoutContext';
 
 const NAV_ITEMS = [
   ['contacts', 'Contacts'],
-  ['applications', 'Applications'],
+  ['applications', 'Short-term applications'],
   ['recruitment', 'Recruitment'],
   ['longterm-applications', 'Long-term applications'],
   ['email-templates', 'Email templates'],

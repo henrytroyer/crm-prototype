@@ -10,6 +10,9 @@ interface ContactEmailThreadSectionProps {
   onSelect: (message: ContactEmailMessage) => void;
 }
 
+const emailRowGrid =
+  'grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_auto] items-center gap-x-2';
+
 export default function ContactEmailThreadSection({
   messages,
   onSelect,
@@ -26,8 +29,22 @@ export default function ContactEmailThreadSection({
             No email correspondence yet.
           </p>
         ) : (
-          <ul className="divide-y divide-crm-taupe/20">
-            {messages.map((message) => (
+          <>
+            <div
+              className="sticky top-0 z-10 flex items-center gap-3 border-b border-crm-taupe/20 bg-crm-surface px-3 py-2"
+              aria-hidden
+            >
+              <span className="w-[26px] shrink-0" />
+              <div className={`min-w-0 flex-1 ${emailRowGrid}`}>
+                <span />
+                <span className="text-center text-xs font-medium uppercase tracking-wide text-crm-slate">
+                  From
+                </span>
+                <span />
+              </div>
+            </div>
+            <ul className="divide-y divide-crm-taupe/20">
+              {messages.map((message) => (
               <li key={message.id}>
                 <button
                   type="button"
@@ -36,23 +53,29 @@ export default function ContactEmailThreadSection({
                 >
                   <EmailDirectionIndicator direction={message.direction} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-crm-heading">
-                      {message.subject}
-                    </p>
+                    <div className={emailRowGrid}>
+                      <p className="truncate font-semibold text-crm-heading">
+                        {message.subject}
+                      </p>
+                      <p className="truncate text-center text-xs text-crm-slate">
+                        {message.senderEmail}
+                      </p>
+                      <time
+                        dateTime={message.sentAt}
+                        className="shrink-0 text-xs text-crm-slate"
+                      >
+                        {formatEmailListDate(message.sentAt)}
+                      </time>
+                    </div>
                     <p className="mt-0.5 truncate text-sm text-crm-slate">
                       {emailBodySnippet(message.body)}
                     </p>
                   </div>
-                  <time
-                    dateTime={message.sentAt}
-                    className="shrink-0 pt-0.5 text-xs text-crm-slate"
-                  >
-                    {formatEmailListDate(message.sentAt)}
-                  </time>
                 </button>
               </li>
             ))}
-          </ul>
+            </ul>
+          </>
         )}
       </div>
     </div>

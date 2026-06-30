@@ -1,6 +1,10 @@
 import { type ReactNode } from 'react';
 import { getTimelineLabel } from '../../data/timelines';
 import type { VolunteerDetail } from '../../types/volunteer';
+import {
+  buildGoogleMapsUrl,
+  formatContactAddress,
+} from '../../utils/formatContactAddress';
 import VolunteerFilesSection from './VolunteerFilesSection';
 import {
   displayLocationPreference,
@@ -10,12 +14,26 @@ import VolunteerAvatar from './VolunteerAvatar';
 
 interface VolunteerContactCardProps {
   detail: VolunteerDetail;
+  onEmailClick?: () => void;
+  onPhoneClick?: () => void;
+  beforeFiles?: ReactNode;
+  besideFiles?: ReactNode;
+  splitFilesRow?: boolean;
 }
 
 export default function VolunteerContactCard({
   detail,
+  onEmailClick,
+  onPhoneClick,
+  beforeFiles,
+  besideFiles,
+  splitFilesRow = false,
 }: VolunteerContactCardProps) {
   const timelineLabel = getTimelineLabel(detail.timelineId);
+  const formattedAddress = detail.demographics
+    ? formatContactAddress(detail.demographics)
+    : null;
+  const displayDateOfBirth = detail.demographics?.dateOfBirth?.trim() || null;
 
   return (
     <div className="rounded-2xl border border-crm-taupe/20 bg-gradient-to-br from-crm-taupe-50 to-crm-surface p-6 shadow-sm">
@@ -45,46 +63,104 @@ export default function VolunteerContactCard({
             </span>
           </div>
 
-          <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-            <ContactField label="Email">
+          <dl className="mt-5 grid grid-cols-2 gap-3">
+            <Field label="Email">
               {detail.email !== '—' ? (
-                <a
-                  href={`mailto:${detail.email}`}
-                  className="font-medium text-crm-heading underline-offset-2 hover:underline"
-                >
-                  {detail.email}
-                </a>
+                onEmailClick ? (
+                  <button
+                    type="button"
+                    onClick={onEmailClick}
+                    className="font-medium text-crm-heading underline-offset-2 hover:text-crm-heading hover:underline"
+                  >
+                    {detail.email}
+                  </button>
+                ) : (
+                  <a
+                    href={`mailto:${detail.email}`}
+                    className="font-medium text-crm-heading underline-offset-2 hover:underline"
+                  >
+                    {detail.email}
+                  </a>
+                )
               ) : (
                 <span className="text-crm-slate">Not provided</span>
               )}
-            </ContactField>
-            <ContactField label="Phone">
+            </Field>
+            <Field label="Phone">
               {detail.phone !== '—' ? (
+                onPhoneClick ? (
+                  <button
+                    type="button"
+                    onClick={onPhoneClick}
+                    className="font-medium text-crm-heading underline-offset-2 hover:text-crm-heading hover:underline"
+                  >
+                    {detail.phone}
+                  </button>
+                ) : (
+                  <a
+                    href={`tel:${detail.phone.replace(/\s/g, '')}`}
+                    className="font-medium text-crm-heading underline-offset-2 hover:underline"
+                  >
+                    {detail.phone}
+                  </a>
+                )
+              ) : (
+                <span className="text-crm-slate">Not provided</span>
+              )}
+            </Field>
+            <Field label="Date of birth">
+              {displayDateOfBirth ? (
+                <span className="font-medium text-crm-heading">
+                  {displayDateOfBirth}
+                </span>
+              ) : (
+                <span className="text-crm-slate">Not provided</span>
+              )}
+            </Field>
+            <Field label="Address">
+              {formattedAddress ? (
                 <a
-                  href={`tel:${detail.phone.replace(/\s/g, '')}`}
-                  className="font-medium text-crm-heading underline-offset-2 hover:underline"
+                  href={buildGoogleMapsUrl(formattedAddress)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="line-clamp-3 whitespace-pre-line font-medium text-crm-heading underline-offset-2 hover:text-crm-heading hover:underline"
                 >
-                  {detail.phone}
+                  {formattedAddress}
                 </a>
               ) : (
                 <span className="text-crm-slate">Not provided</span>
               )}
-            </ContactField>
+            </Field>
           </dl>
         </div>
       </div>
 
-      <VolunteerFilesSection
-        volunteerName={detail.name}
-        profilePhotoUrl={detail.profilePhotoUrl}
-        files={detail.files}
-        showOtherFiles
-      />
+      {beforeFiles && <div className="mt-6">{beforeFiles}</div>}
+
+      {splitFilesRow ? (
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
+          <VolunteerFilesSection
+            volunteerName={detail.name}
+            profilePhotoUrl={detail.profilePhotoUrl}
+            files={detail.files}
+            showOtherFiles
+            embeddedInGrid
+          />
+          {besideFiles}
+        </div>
+      ) : (
+        <VolunteerFilesSection
+          volunteerName={detail.name}
+          profilePhotoUrl={detail.profilePhotoUrl}
+          files={detail.files}
+          showOtherFiles
+        />
+      )}
     </div>
   );
 }
 
-function ContactField({
+function Field({
   label,
   children,
 }: {
@@ -92,11 +168,11 @@ function ContactField({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl bg-crm-surface/80 px-4 py-3 ring-1 ring-crm-taupe/20/80">
+    <div className="flex h-24 flex-col rounded-xl bg-crm-surface/80 px-4 py-3 ring-1 ring-crm-taupe/20/80">
       <dt className="text-xs font-medium uppercase tracking-wide text-crm-slate">
         {label}
       </dt>
-      <dd className="mt-1 text-sm">{children}</dd>
+      <dd className="mt-1 flex-1 overflow-hidden text-sm">{children}</dd>
     </div>
   );
 }

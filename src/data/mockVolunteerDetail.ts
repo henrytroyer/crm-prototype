@@ -1,3 +1,4 @@
+import { buildMockVolunteerDemographics } from "./mockVolunteerContactProfile";
 import {
   MOCK_APPLICATION_FORM_FIELDS,
   MOCK_APPLICATION_FORM_FIELDS_RACHEL,
@@ -76,6 +77,7 @@ export function buildMockVolunteerDetail(volunteer: Volunteer): VolunteerDetail 
           : undefined,
     }),
     phone: "+1 (555) 201-4401",
+    demographics: buildMockVolunteerDemographics(volunteer.id),
     files: mockFiles(seed),
     housing: "Pending",
     itinerary: mockItineraryForTimeline(volunteer.timelineId),

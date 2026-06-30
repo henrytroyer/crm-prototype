@@ -48,17 +48,25 @@ export default function ContactEmailDetailModal({
       <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-crm-taupe/20 bg-crm-surface shadow-2xl">
         <div className="shrink-0 border-b border-crm-taupe/20 px-5 py-4">
           <OverlayBackButton backLabel={contactName} onBack={onClose} />
-          <h2
-            id="contact-email-detail-title"
-            className="mt-3 text-lg font-semibold text-crm-heading"
-          >
-            {message.subject}
-          </h2>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-crm-slate">
-            <EmailDirectionIndicator direction={message.direction} size="md" />
-            <time dateTime={message.sentAt}>
+          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_auto] items-center gap-x-3">
+            <h2
+              id="contact-email-detail-title"
+              className="truncate text-lg font-semibold text-crm-heading"
+            >
+              {message.subject}
+            </h2>
+            <p className="truncate text-center text-sm text-crm-slate">
+              {message.senderEmail}
+            </p>
+            <time
+              dateTime={message.sentAt}
+              className="shrink-0 text-sm text-crm-slate"
+            >
               {formatEmailDetailDate(message.sentAt)}
             </time>
+          </div>
+          <p className="mt-2">
+            <EmailDirectionIndicator direction={message.direction} size="md" />
           </p>
         </div>
 

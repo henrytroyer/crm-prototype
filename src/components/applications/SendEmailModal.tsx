@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EMAIL_TEMPLATES } from '../../data/emailTemplates';
 import { sendApplicationEmail } from '../../services/crmApi';
-import type { ApplicationEmail } from '../../types/volunteer';
+import type { ApplicationEmail, EmailRecipientRole } from '../../types/volunteer';
 import type { VolunteerDetail } from '../../types/volunteer';
 import {
   buildMailtoUrl,
@@ -13,12 +13,31 @@ import OverlayBackButton from '../layout/OverlayBackButton';
 interface SendEmailModalProps {
   detail: VolunteerDetail;
   onClose: () => void;
+  initialTemplateId?: string;
+  initialRecipientRole?: EmailRecipientRole;
+  extraMergeContext?: Record<string, string>;
 }
 
-export default function SendEmailModal({ detail, onClose }: SendEmailModalProps) {
+export default function SendEmailModal({
+  detail,
+  onClose,
+  initialTemplateId,
+  initialRecipientRole,
+  extraMergeContext,
+}: SendEmailModalProps) {
   const recipients = detail.emails;
-  const [recipientIndex, setRecipientIndex] = useState(0);
-  const [templateId, setTemplateId] = useState(EMAIL_TEMPLATES[0]?.id ?? '');
+  const initialRecipientIndex = useMemo(() => {
+    if (!initialRecipientRole) return 0;
+    const index = recipients.findIndex(
+      (recipient) => recipient.role === initialRecipientRole,
+    );
+    return index >= 0 ? index : 0;
+  }, [initialRecipientRole, recipients]);
+
+  const [recipientIndex, setRecipientIndex] = useState(initialRecipientIndex);
+  const [templateId, setTemplateId] = useState(
+    initialTemplateId ?? EMAIL_TEMPLATES[0]?.id ?? '',
+  );
   const [sending, setSending] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -31,13 +50,16 @@ export default function SendEmailModal({ detail, onClose }: SendEmailModalProps)
     if (!selectedRecipient || !selectedTemplate) {
       return { subject: '', body: '' };
     }
-    const context = buildMergeContext(detail, selectedRecipient);
+    const context = {
+      ...buildMergeContext(detail, selectedRecipient),
+      ...extraMergeContext,
+    };
     return mergeEmailTemplate(
       selectedTemplate.subject,
       selectedTemplate.body,
       context,
     );
-  }, [detail, selectedRecipient, selectedTemplate]);
+  }, [detail, extraMergeContext, selectedRecipient, selectedTemplate]);
 
   const mailtoUrl = useMemo(() => {
     if (!selectedRecipient?.address || !merged.subject) return '';

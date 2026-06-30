@@ -4,11 +4,15 @@ import { useLayout } from '../context/LayoutContext';
 import ApplicationsPage from './ApplicationsPage';
 import ContactsPage from './ContactsPage';
 import EmailTemplatesPage from './EmailTemplatesPage';
+import LongtermApplicationsPage from './LongtermApplicationsPage';
 import RecruitmentPage from './RecruitmentPage';
 
 export default function Dashboard() {
   const [activePage, setActivePage] = useState<PageId>('applications');
   const [recruitmentFocusId, setRecruitmentFocusId] = useState<string | null>(
+    null,
+  );
+  const [applicationFocusId, setApplicationFocusId] = useState<string | null>(
     null,
   );
   const { closeSidebar } = useLayout();
@@ -24,15 +28,29 @@ export default function Dashboard() {
     closeSidebar();
   };
 
+  const handleGoToApplication = (applicationId: string) => {
+    setApplicationFocusId(applicationId);
+    setActivePage('applications');
+    closeSidebar();
+  };
+
   return (
     <div className="flex h-screen bg-crm-white">
       <AppSidebar activePage={activePage} onNavigate={handleNavigate} />
 
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden p-8">
-        {activePage === 'applications' && <ApplicationsPage />}
+        {activePage === 'applications' && (
+          <ApplicationsPage
+            focusApplicationId={applicationFocusId}
+            onClearFocus={() => setApplicationFocusId(null)}
+          />
+        )}
 
         {activePage === 'contacts' && (
-          <ContactsPage onGoToRecruitment={handleGoToRecruitment} />
+          <ContactsPage
+            onGoToRecruitment={handleGoToRecruitment}
+            onGoToApplication={handleGoToApplication}
+          />
         )}
 
         {activePage === 'email-templates' && <EmailTemplatesPage />}
@@ -44,12 +62,7 @@ export default function Dashboard() {
           />
         )}
 
-        {activePage === 'longterm-applications' && (
-          <PlaceholderPage
-            title="Long-term applications"
-            description="Multi-term and long-term volunteer applications"
-          />
-        )}
+        {activePage === 'longterm-applications' && <LongtermApplicationsPage />}
 
         {activePage === 'forms' && (
           <PlaceholderPage

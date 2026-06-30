@@ -74,6 +74,17 @@ Thank you,
 Volunteer Coordination Team`,
   },
   {
+    id: 'reference-reminder',
+    name: 'Reference reminder (to applicant)',
+    subject: 'Reminder: {{referenceTypeLabel}} reference still needed',
+    body: `Hi {{firstName}},
+
+We're still waiting for your {{referenceTypeLabel}} reference for your long-term application. Please follow up with them and ask them to complete the form.
+
+Thank you,
+Volunteer Coordination Team`,
+  },
+  {
     id: 'parent-update',
     name: 'Parent update',
     subject: "Update on {{name}}'s application",

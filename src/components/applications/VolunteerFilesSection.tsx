@@ -20,6 +20,7 @@ interface VolunteerFilesSectionProps {
   files?: VolunteerFile[];
   showOtherFiles?: boolean;
   variant?: 'panel' | 'inline';
+  embeddedInGrid?: boolean;
 }
 
 type FileAction = 'preview' | 'download';
@@ -35,6 +36,7 @@ export default function VolunteerFilesSection({
   files = [],
   showOtherFiles = false,
   variant = 'inline',
+  embeddedInGrid = false,
 }: VolunteerFilesSectionProps) {
   const [previewFile, setPreviewFile] = useState<VolunteerFile | null>(null);
   const [passwordFile, setPasswordFile] = useState<VolunteerFile | null>(null);
@@ -197,7 +199,13 @@ export default function VolunteerFilesSection({
           <div className="mt-4">{content}</div>
         </div>
       ) : (
-        <div className="mt-6 border-t border-crm-taupe/20 pt-5">
+        <div
+          className={
+            embeddedInGrid
+              ? 'border-t border-crm-taupe/20 pt-5 md:border-t-0 md:pt-0'
+              : 'mt-6 border-t border-crm-taupe/20 pt-5'
+          }
+        >
           <h3 className="text-sm font-semibold uppercase tracking-wide text-crm-slate">
             Files
           </h3>

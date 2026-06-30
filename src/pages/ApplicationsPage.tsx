@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ApplicationDetailPanel from "../components/applications/ApplicationDetailPanel";
 import ApplicationFilters from "../components/applications/ApplicationFilters";
 import PipelineSection from "../components/applications/PipelineSection";
+import { APPLICATION_STATUS_OPTIONS } from "../constants/applicationStatuses";
 import { useLayout } from "../context/LayoutContext";
 import { useNavLayer } from "../context/NavigationHistoryContext";
 import {
@@ -13,10 +14,21 @@ import {
   countMatchingVolunteers,
   emptyFilters,
   filterPipeline,
+  findVolunteerInPipeline,
+  updateVolunteerStatusInPipeline,
 } from "../utils/filterApplications";
+import { syncAllContactsFromPipeline } from "../services/contactApplicationSync";
 
-export default function ApplicationsPage() {
+export default function ApplicationsPage({
+  focusApplicationId,
+  onClearFocus,
+}: {
+  focusApplicationId?: string | null;
+  onClearFocus?: () => void;
+}) {
   const [filters, setFilters] = useState<ApplicationFilterState>(emptyFilters);
+  const [pipeline, setPipeline] =
+    useState<typeof applicationPipeline>(applicationPipeline);
   const [selectedApplication, setSelectedApplication] =
     useState<Volunteer | null>(null);
 
@@ -26,34 +38,56 @@ export default function ApplicationsPage() {
     `application-${selectedApplication?.id ?? "none"}`,
   );
 
-  const totalCount = useMemo(
-    () => countVolunteers(applicationPipeline),
-    [],
-  );
+  const totalCount = useMemo(() => countVolunteers(pipeline), [pipeline]);
 
   const matchingCount = useMemo(
-    () => countMatchingVolunteers(applicationPipeline, filters),
-    [filters],
+    () => countMatchingVolunteers(pipeline, filters),
+    [pipeline, filters],
   );
 
   const filteredPipeline = useMemo(
-    () => filterPipeline(applicationPipeline, filters),
-    [filters],
+    () => filterPipeline(pipeline, filters),
+    [pipeline, filters],
   );
 
   const showingDetail = selectedApplication !== null;
 
   const { setDetailMode } = useLayout();
 
+  const handleStatusChange = useCallback(
+    (volunteerId: string, status: string) => {
+      setPipeline((current) =>
+        updateVolunteerStatusInPipeline(current, volunteerId, status),
+      );
+      setSelectedApplication((current) =>
+        current?.id === volunteerId ? { ...current, status } : current,
+      );
+    },
+    [],
+  );
+
+  useEffect(() => {
+    syncAllContactsFromPipeline(pipeline);
+  }, [pipeline]);
+
   useEffect(() => {
     setDetailMode(showingDetail);
     return () => setDetailMode(false);
   }, [showingDetail, setDetailMode]);
 
+  useEffect(() => {
+    if (!focusApplicationId) return;
+    const match = findVolunteerInPipeline(pipeline, focusApplicationId);
+    if (match) {
+      setSelectedApplication(match);
+      onClearFocus?.();
+    }
+  }, [focusApplicationId, onClearFocus, pipeline]);
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="mb-6 shrink-0">
-        <h1 className="text-4xl font-semibold text-crm-heading">Applications</h1>
+        <h1 className="text-4xl font-semibold text-crm-heading">Short-term applications</h1>
         {!showingDetail && (
           <p className="mt-2 text-crm-slate">
             Track volunteers through onboarding, references, placement, and
@@ -102,6 +136,8 @@ export default function ApplicationsPage() {
                   key={section.stage}
                   section={section}
                   onSelectVolunteer={setSelectedApplication}
+                  statusOptions={APPLICATION_STATUS_OPTIONS}
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </div>

@@ -1,6 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavLayer } from "../../context/NavigationHistoryContext";
+import { LONGTERM_REFERENCE_TYPE_LABELS } from "../../constants/longtermReferenceSlots";
 import { getTimelineLabel } from "../../data/timelines";
+import { buildLongtermReferenceSlots } from "../../data/mockLongtermReferences";
 import { buildMockVolunteerDetail } from "../../data/mockVolunteerDetail";
 import type { Volunteer } from "../../types/volunteer";
 import {
@@ -9,26 +11,50 @@ import {
 } from "../../utils/volunteerLocation";
 import FormFieldsPanel, { findFormPdf } from "./FormFieldsPanel";
 import ItineraryBubbles from "./ItineraryBubbles";
+import LongtermReferencesPanel from "./LongtermReferencesPanel";
 import OnboardingProgress from "./OnboardingProgress";
 import SendEmailModal from "./SendEmailModal";
 import TermNotesChat from "./TermNotesChat";
 import VolunteerContactCard from "./VolunteerContactCard";
+import ContactCallModal from "../contacts/ContactCallModal";
 
 type DrillDownView = "application" | "pastor" | null;
 
 interface ApplicationDetailPanelProps {
   volunteer: Volunteer;
   onBack: () => void;
+  backLabel?: string;
+  quickActionsBeforeFiles?: boolean;
 }
 
 export default function ApplicationDetailPanel({
   volunteer,
   onBack,
+  backLabel = "← Back to short-term applications",
+  quickActionsBeforeFiles = false,
 }: ApplicationDetailPanelProps) {
   const detail = buildMockVolunteerDetail(volunteer);
+  const referenceSlots = useMemo(
+    () =>
+      quickActionsBeforeFiles
+        ? buildLongtermReferenceSlots(volunteer.id)
+        : [],
+    [quickActionsBeforeFiles, volunteer.id],
+  );
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
+  const [referenceReminderSlot, setReferenceReminderSlot] = useState<
+    number | null
+  >(null);
+  const [callOpen, setCallOpen] = useState(false);
   const [drillDown, setDrillDown] = useState<DrillDownView>(null);
+  const [selectedReferenceSlot, setSelectedReferenceSlot] = useState<
+    number | null
+  >(null);
   const timelineLabel = getTimelineLabel(volunteer.timelineId);
+
+  const selectedReference = referenceSlots.find(
+    (slot) => slot.slotIndex === selectedReferenceSlot,
+  );
 
   const { requestClose: requestCloseDrillDown } = useNavLayer(
     drillDown !== null,
@@ -36,10 +62,25 @@ export default function ApplicationDetailPanel({
     `form-${drillDown ?? "none"}-${volunteer.id}`,
   );
 
+  const { requestClose: requestCloseReference } = useNavLayer(
+    selectedReferenceSlot !== null,
+    () => setSelectedReferenceSlot(null),
+    `reference-${selectedReferenceSlot ?? "none"}-${volunteer.id}`,
+  );
+
   const { requestClose: requestCloseEmail } = useNavLayer(
     sendEmailOpen,
-    () => setSendEmailOpen(false),
+    () => {
+      setSendEmailOpen(false);
+      setReferenceReminderSlot(null);
+    },
     `send-email-${volunteer.id}`,
+  );
+
+  const { requestClose: requestCloseCall } = useNavLayer(
+    callOpen,
+    () => setCallOpen(false),
+    `call-${volunteer.id}`,
   );
 
   useEffect(() => {
@@ -47,14 +88,36 @@ export default function ApplicationDetailPanel({
       if (
         e.key === "Escape" &&
         !drillDown &&
-        !sendEmailOpen
+        !sendEmailOpen &&
+        !callOpen &&
+        selectedReferenceSlot === null
       ) {
         onBack();
       }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onBack, drillDown, sendEmailOpen]);
+  }, [onBack, drillDown, sendEmailOpen, callOpen, selectedReferenceSlot]);
+
+  const quickActions = (
+    <Panel title="Quick Actions">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ActionButton
+          label="View Full Application"
+          onClick={() => setDrillDown("application")}
+        />
+        <ActionButton
+          label="View Pastor Reference"
+          onClick={() => setDrillDown("pastor")}
+        />
+        <ActionButton
+          label="Send email"
+          onClick={() => setSendEmailOpen(true)}
+        />
+        <ActionButton label="Open Full CRM Profile" />
+      </div>
+    </Panel>
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-crm-taupe/20 bg-crm-surface p-2 shadow-sm">
@@ -65,31 +128,33 @@ export default function ApplicationDetailPanel({
             onClick={onBack}
             className="text-sm font-medium text-crm-slate hover:text-crm-heading"
           >
-            ← Back to applications
+            {backLabel}
           </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
-            <VolunteerContactCard detail={detail} />
+            <VolunteerContactCard
+              detail={detail}
+              onEmailClick={() => setSendEmailOpen(true)}
+              onPhoneClick={() => setCallOpen(true)}
+              beforeFiles={quickActionsBeforeFiles ? quickActions : undefined}
+              splitFilesRow={quickActionsBeforeFiles}
+              besideFiles={
+                quickActionsBeforeFiles ? (
+                  <LongtermReferencesPanel
+                    slots={referenceSlots}
+                    onSelectReference={setSelectedReferenceSlot}
+                    onSendReminder={(slotIndex) => {
+                      setReferenceReminderSlot(slotIndex);
+                      setSendEmailOpen(true);
+                    }}
+                  />
+                ) : undefined
+              }
+            />
 
-            <Panel title="Quick Actions">
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <ActionButton
-                  label="View Full Application"
-                  onClick={() => setDrillDown("application")}
-                />
-                <ActionButton
-                  label="View Pastor Reference"
-                  onClick={() => setDrillDown("pastor")}
-                />
-                <ActionButton
-                  label="Send email"
-                  onClick={() => setSendEmailOpen(true)}
-                />
-                <ActionButton label="Open Full CRM Profile" />
-              </div>
-            </Panel>
+            {!quickActionsBeforeFiles && quickActions}
 
             <Panel title="Onboarding Progress">
               <OnboardingProgress
@@ -141,8 +206,49 @@ export default function ApplicationDetailPanel({
         </div>
 
         {sendEmailOpen && (
-          <SendEmailModal detail={detail} onClose={requestCloseEmail} />
+          <SendEmailModal
+            detail={detail}
+            onClose={requestCloseEmail}
+            initialTemplateId={
+              referenceReminderSlot !== null ? "reference-reminder" : undefined
+            }
+            initialRecipientRole={
+              referenceReminderSlot !== null ? "volunteer" : undefined
+            }
+            extraMergeContext={
+              referenceReminderSlot !== null
+                ? {
+                    referenceType:
+                      referenceSlots[referenceReminderSlot]?.type ?? "",
+                    referenceTypeLabel:
+                      LONGTERM_REFERENCE_TYPE_LABELS[
+                        referenceSlots[referenceReminderSlot]?.type ?? "friend"
+                      ],
+                  }
+                : undefined
+            }
+          />
         )}
+
+        {callOpen && detail.phone !== '—' && (
+          <ContactCallModal
+            contactName={detail.name}
+            phone={detail.phone}
+            onClose={requestCloseCall}
+          />
+        )}
+
+        {selectedReference &&
+          selectedReference.status === "received" &&
+          selectedReference.formFields && (
+            <FormFieldsPanel
+              title={`${LONGTERM_REFERENCE_TYPE_LABELS[selectedReference.type]} reference — ${selectedReference.refereeName}`}
+              backLabel={detail.name}
+              fields={selectedReference.formFields}
+              emptyMessage="No reference fields on this item."
+              onClose={requestCloseReference}
+            />
+          )}
 
         {drillDown && (
           <FormFieldsPanel

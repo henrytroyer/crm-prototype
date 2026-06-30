@@ -11,11 +11,14 @@ import {
   countMatchingContacts,
   filterContacts,
 } from '../utils/filterContacts';
+import { ingestPendingDonations } from '../services/contactsApi';
 
 export default function ContactsPage({
   onGoToRecruitment,
+  onGoToApplication,
 }: {
   onGoToRecruitment?: (prospectId: string) => void;
+  onGoToApplication?: (applicationId: string) => void;
 }) {
   const [filters, setFilters] = useState(emptyContactFilters());
   const [selectedContact, setSelectedContact] =
@@ -47,6 +50,23 @@ export default function ContactsPage({
     setDetailMode(showingDetail);
     return () => setDetailMode(false);
   }, [showingDetail, setDetailMode]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function syncDonations() {
+      const synced = await ingestPendingDonations();
+      if (!cancelled && synced.length > 0) {
+        refetch();
+      }
+    }
+
+    void syncDonations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refetch]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -88,6 +108,7 @@ export default function ContactsPage({
           contact={selectedContact}
           onBack={requestCloseContact}
           onGoToRecruitment={onGoToRecruitment}
+          onGoToApplication={onGoToApplication}
           onContactUpdated={refetch}
           onSelectContact={(id) => {
             const next = contacts.find((c) => c.id === id);

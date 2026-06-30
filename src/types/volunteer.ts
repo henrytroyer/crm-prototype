@@ -1,3 +1,4 @@
+import type { ContactDemographics } from './contact';
 import type { VolunteerItinerary } from "./itinerary";
 
 export interface SignupTimeline {
@@ -84,6 +85,7 @@ export interface VolunteerDetail extends Volunteer {
   email: string;
   emails: ApplicationEmail[];
   phone: string;
+  demographics?: ContactDemographics;
   files: VolunteerFile[];
   housing: string;
   itinerary: VolunteerItinerary;

@@ -9,6 +9,7 @@ import type {
   ContactTag,
 } from '../types/contact';
 import type { RecruitmentProspect } from '../types/recruitment';
+import { mergeContactDetailWithSync } from './contactSyncStorage';
 
 const OVERRIDES_KEY = 'crm-contact-overrides';
 const CREATED_KEY = 'crm-contact-created';
@@ -98,7 +99,7 @@ export function getContactDetailBase(contactId: string): ContactDetail {
   const override = readOverrides()[contactId];
 
   if (listItem) {
-    return {
+    return mergeContactDetailWithSync(contactId, {
       ...mockDetail,
       ...listItem,
       id: contactId,
@@ -106,14 +107,17 @@ export function getContactDetailBase(contactId: string): ContactDetail {
       ...(override?.demographics !== undefined
         ? { demographics: override.demographics }
         : {}),
-    };
+    });
   }
 
   if (override?.demographics !== undefined) {
-    return { ...mockDetail, demographics: override.demographics };
+    return mergeContactDetailWithSync(contactId, {
+      ...mockDetail,
+      demographics: override.demographics,
+    });
   }
 
-  return mockDetail;
+  return mergeContactDetailWithSync(contactId, mockDetail);
 }
 
 export function findContactByEmail(email: string): ContactListItem | undefined {
@@ -135,12 +139,26 @@ export function createContactFromProspect(
     return getContactListItem(existing.id)!;
   }
 
-  const contact: ContactListItem = {
-    id: `contact-${Date.now()}`,
+  return createContact({
     name: prospect.name.trim(),
     email: prospect.email.trim() || '—',
     phone: prospect.phone.trim() || undefined,
     tags: ['recruitment'],
+  });
+}
+
+export function createContact(input: {
+  name: string;
+  email: string;
+  phone?: string;
+  tags: ContactTag[];
+}): ContactListItem {
+  const contact: ContactListItem = {
+    id: `contact-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: input.name.trim(),
+    email: input.email.trim() || '—',
+    phone: input.phone?.trim() || undefined,
+    tags: [...new Set(input.tags)],
   };
 
   writeCreated([contact, ...readCreated()]);
