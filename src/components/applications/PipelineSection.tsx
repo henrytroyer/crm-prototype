@@ -8,15 +8,20 @@ import {
   hasDistinctAssignedLocation,
 } from "../../utils/volunteerLocation";
 import VolunteerAvatar from "./VolunteerAvatar";
+import VolunteerStatusSelect from "./VolunteerStatusSelect";
 
 interface PipelineSectionProps {
   section: PipelineSectionType;
   onSelectVolunteer: (volunteer: Volunteer) => void;
+  statusOptions: readonly string[];
+  onStatusChange: (volunteerId: string, newStatus: string) => void | Promise<void>;
 }
 
 export default function PipelineSection({
   section,
   onSelectVolunteer,
+  statusOptions,
+  onStatusChange,
 }: PipelineSectionProps) {
   return (
     <div className="overflow-hidden rounded-3xl border border-crm-taupe/20 bg-crm-surface shadow-sm">
@@ -68,9 +73,12 @@ export default function PipelineSection({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="rounded-full bg-crm-white px-3 py-1 text-sm text-crm-text">
-                {volunteer.status}
-              </span>
+              <VolunteerStatusSelect
+                volunteerId={volunteer.id}
+                value={volunteer.status}
+                options={statusOptions}
+                onChange={onStatusChange}
+              />
               <span className="text-crm-slate">→</span>
             </div>
           </button>
